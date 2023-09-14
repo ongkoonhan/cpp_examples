@@ -20,29 +20,29 @@ public:
     // vector(const vector& other)
     //     : m_size(other.m_size)
     //     , m_capacity(other.m_capacity)
-    //     , m_arr(new T[other.m_capacity])
+    //     , m_data(new T[other.m_capacity])
     // {
     //     for (size_t i = 0; i < m_capacity; ++i)
-    //         m_arr[i] = other.m_arr[i];
+    //         m_data[i] = other.m_data[i];
     // }
 
     ~vector()
     {
         clear();   // destroy all objects
-        ::operator delete(m_arr, m_capacity * sizeof(T));
+        ::operator delete(m_data, m_capacity * sizeof(T));
     }
 
     void push_back(const T& val)
     {
         __capacityCheck();        
-        m_arr[m_size] = val;
+        m_data[m_size] = val;
         m_size++;
     }
 
     void push_back(T&& val)
     {
         __capacityCheck();
-        m_arr[m_size] = std::move(val);
+        m_data[m_size] = std::move(val);
         m_size++;
     }
 
@@ -50,9 +50,9 @@ public:
     T& emplace_back(Args&&... args)
     {
         __capacityCheck();
-        new(&m_arr[m_size]) T(std::forward<Args>(args)...);   // construct at array address with placement new
+        new(&m_data[m_size]) T(std::forward<Args>(args)...);   // construct at array address with placement new
         m_size++;
-        return m_arr[m_size-1];
+        return m_data[m_size-1];
     }
 
     void pop_back()
@@ -60,25 +60,25 @@ public:
         if (m_size > 0)
         {
             m_size--;
-            m_arr[m_size].~T();
+            m_data[m_size].~T();
         }
     }
 
     void clear()
     {
         for (size_t i = 0; i < m_size; i++)
-            m_arr[i].~T();
+            m_data[i].~T();
         m_size = 0;
     }
 
     T& operator[](size_t i)
     {
-        return m_arr[i];
+        return m_data[i];
     }
 
     const T& operator[](size_t i) const
     {
-        return m_arr[i];
+        return m_data[i];
     }
 
     size_t size() const
@@ -101,15 +101,15 @@ private:
         // placement new at array address with uinitialized memory
         // use move constructor if possible
         for (size_t i = 0; i < newSize; i++)
-            new(&newArr[i]) T(std::move_if_noexcept(m_arr[i]));
-        // destroy all existing objects in m_arr before deleting the memory
+            new(&newArr[i]) T(std::move_if_noexcept(m_data[i]));
+        // destroy all existing objects in m_data before deleting the memory
         // deallocate with ::operator delete
         for (size_t i = 0; i < m_size; i++)
-            m_arr[i].~T();
-        ::operator delete(m_arr, m_capacity * sizeof(T));
+            m_data[i].~T();
+        ::operator delete(m_data, m_capacity * sizeof(T));
         
         m_size = newSize;
-        m_arr = newArr;
+        m_data = newArr;
         m_capacity = newCapacity;
     }
 
@@ -123,7 +123,7 @@ private:
 private:
     size_t m_size = 0;
     size_t m_capacity = 0;
-    T* m_arr = nullptr;
+    T* m_data = nullptr;
 };
 
 }   // namespace my
