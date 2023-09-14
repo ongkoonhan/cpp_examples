@@ -86,6 +86,11 @@ public:
         return m_size;
     }
 
+    size_t capacity() const
+    {
+        return m_capacity;
+    }
+
 private:
     void __realloc(size_t newCapacity)
     {
@@ -96,7 +101,7 @@ private:
         // placement new at array address with uinitialized memory
         // use move constructor if possible
         for (size_t i = 0; i < newSize; i++)
-            new(&newArr[i]) T(std::move(m_arr[i]));
+            new(&newArr[i]) T(std::move_if_noexcept(m_arr[i]));
         // destroy all existing objects in m_arr before deleting the memory
         // deallocate with ::operator delete
         for (size_t i = 0; i < m_size; i++)
