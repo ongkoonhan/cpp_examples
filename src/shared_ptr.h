@@ -12,8 +12,6 @@ class shared_ptr
 {
 public:
     shared_ptr()
-        : m_ptr(nullptr)
-        , m_counter(nullptr)
     {
     }
 
@@ -27,7 +25,8 @@ public:
         : m_ptr(other.m_ptr)
         , m_counter(other.m_counter)
     {
-        (*m_counter)++;
+        if (m_counter)
+            ++(*m_counter);
     }
 
     shared_ptr(shared_ptr<T>&& other) noexcept
@@ -38,11 +37,13 @@ public:
         other.m_counter = nullptr;
     }
 
+    // TODO: copy and move assignment
+
     ~shared_ptr()
     {
         if (m_counter)
         {    
-            (*m_counter)--;
+            --(*m_counter);
             if (*m_counter == 0)
             {
                 delete m_ptr;
@@ -51,6 +52,25 @@ public:
         }
     }
  
+    void reset() noexcept
+    {
+        this->~shared_ptr();
+        m_ptr = nullptr;
+        m_counter = nullptr;
+    }
+
+    void reset(T* ptr)
+    {
+        this->~shared_ptr();
+        m_ptr = ptr;
+        m_counter = new size_t(1);
+    }
+
+    // void swap(shared_ptr<T>& r) noexcept
+    // {
+    //     // this function requires a pointer to the control block
+    // }
+
     size_t use_count() const
     {
         if(m_counter)
@@ -60,22 +80,24 @@ public:
  
     T* get()
     {
-        return m_ptr;
+        if (m_ptr)
+            return m_ptr;
+        return 0;
     }
  
     T& operator*() const noexcept
     {
-        return *m_ptr;
+        return *get();
     }
  
     T* operator->() const noexcept
     {
-        return m_ptr;
+        return get();
     }
-   
+
 private:
-    T* m_ptr;
-    size_t* m_counter;
+    T* m_ptr = nullptr;
+    size_t* m_counter = nullptr;
 };
 
 // template <typename T>
