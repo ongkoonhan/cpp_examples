@@ -17,14 +17,26 @@ public:
         __realloc(2);   // start with 2
     }
 
-    // vector(const vector& other)
-    //     : m_size(other.m_size)
-    //     , m_capacity(other.m_capacity)
-    //     , m_data(new T[other.m_capacity])
-    // {
-    //     for (size_t i = 0; i < m_capacity; ++i)
-    //         m_data[i] = other.m_data[i];
-    // }
+    vector(const vector& other)
+    {
+        __realloc(other.m_capacity);
+        // placement new at array address with uinitialized memory
+        for (size_t i = 0; i < other.m_size; i++)
+            new(&m_data[i]) T(static_cast<const T&>(other.m_data[i]));   // force copy
+        m_size = other.m_size;
+    }
+
+    vector(vector&& other)
+        : m_size(other.m_size)
+        , m_capacity(other.m_capacity)
+        , m_data(other.m_data)
+    {
+        other.m_size = 0;
+        other.m_capacity = 0;
+        other.m_data = nullptr;
+    }
+
+    // TODO: copy and move assignment
 
     ~vector()
     {
@@ -64,6 +76,12 @@ public:
         }
     }
 
+    void reserve(size_t new_cap)
+    {
+        if (new_cap > m_capacity)
+            __realloc(new_cap);
+    }
+
     void clear()
     {
         for (size_t i = 0; i < m_size; i++)
@@ -97,7 +115,7 @@ private:
         size_t newSize = newCapacity < m_size ? newCapacity : m_size;
         // ::operator new to allocate memory without calling constructor
         // cast void* to T*
-        T* newArr = (T*) ::operator new(newCapacity * sizeof(T));   
+        T* newArr = reinterpret_cast<T*>( ::operator new(newCapacity * sizeof(T)) );
         // placement new at array address with uinitialized memory
         // use move constructor if possible
         for (size_t i = 0; i < newSize; i++)
