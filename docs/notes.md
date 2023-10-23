@@ -37,6 +37,8 @@
 * FIX protocol
     * 
     * https://www.fixtrading.org/online-specification/
+* More details on TCP (to add to notes)
+    * https://packetlife.net/blog/2010/jun/7/understanding-tcp-sequence-acknowledgment-numbers/
 
 
 ## C++ topics
@@ -49,6 +51,49 @@
     * how do virtual destructors work?
         * destructor for derived class called even though pointer/ref is of base type
         * virtual destructor should always be used when one or more functions are marked as virtual
+* memory allocation/deallocation
+    * expression new
+        * create (array of) objects with synamic storage duration
+    * operator new
+        * attempts to allocate requested number of  (can throw if allocation fails)
+            * might use malloc inside the implementation (no guarentees)
+        * `void* operator new  ( std::size_t count );`
+            * `::operator new()` and `::operator new[]()` are the same in STL
+        * Can be replaced by user
+        * https://en.cppreference.com/w/cpp/memory/new/operator_new
+    * https://learn.microsoft.com/en-us/cpp/standard-library/new-operators?view=msvc-170
+
+
+
+* miscellaneous
+    * function pointer
+        * declaration: 
+            ```
+            return_type (*FuncPtr) (parameter type, ....);
+            ```
+        * examples and variations
+            ```
+            // basic version
+            int (*func)(int, int) --> int func(int, int)
+            
+            // nicer syntax
+            using func = int(*)(int, int) --> int func(int, int)
+            
+            // const member function pointer
+            int (SomeClass::*func)(int, int) const --> int SomeClass::func(int, int) const
+            ```
+        * example
+            ```
+            int multiply(int a, int b) { return a * b; }
+            ...
+            int main()
+            {
+                int (*func)(int, int);    
+                func = multiply;
+                ...
+            }
+            ```
+
 * const vs constexpr
 * lvalue vs rvalue
 * threading, mutex
@@ -64,3 +109,10 @@
 * what is a singleton?
 * multithreading vs multiprocessing
 * what is a segfault?
+
+
+
+# TODO
+* operator new/delete
+* placement new
+* malloc/free vs new/delete
