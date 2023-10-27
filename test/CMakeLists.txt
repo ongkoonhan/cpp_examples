@@ -7,6 +7,7 @@ add_executable(Tests
 target_link_libraries(Tests
     gtest_main
     gtest
+    gmock
     cpp_examples
 )
 gtest_discover_tests(Tests)

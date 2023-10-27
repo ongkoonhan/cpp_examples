@@ -53,9 +53,9 @@
         * virtual destructor should always be used when one or more functions are marked as virtual
 * memory allocation/deallocation
     * expression new
-        * create (array of) objects with synamic storage duration
+        * create (array of) objects with dynamic storage duration
     * operator new
-        * attempts to allocate requested number of  (can throw if allocation fails)
+        * attempts to allocate requested number of bytes (can throw if allocation fails)
             * might use malloc inside the implementation (no guarentees)
         * `void* operator new  ( std::size_t count );`
             * `::operator new()` and `::operator new[]()` are the same in STL
