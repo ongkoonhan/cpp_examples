@@ -226,7 +226,7 @@ TEST(WeakPtrTest, DestructorTest)
         mock_shared_ptr<int> s_ptr2(s_ptr);
         EXPECT_EQ(ptr.use_count(), 2);
     }
-    // test control block destruction when shared_ptr is out of scope
+    // test control block destruction when weak_ptr is out of scope
     const mock_control_block* ctrl = ptr.get_control_block();
     EXPECT_NE(ctrl, nullptr);
     EXPECT_CALL(*ctrl, Die());

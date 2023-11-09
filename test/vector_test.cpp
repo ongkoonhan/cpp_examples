@@ -133,9 +133,11 @@ TEST(VectorTest, MoveConstructorTest)
     EXPECT_EQ(vecCopy1.size(), 10000000);
     // move constructor
     my::vector<CopyOnly> vecCopy2(std::move(vecCopy1));
-    vecCopy1.~vector<CopyOnly>();
     EXPECT_EQ(vecCopy2.size(), 10000000);
     EXPECT_EQ(vecCopy2[100].m_a, 10);
+    EXPECT_EQ(vecCopy1.capacity(), 0);
+    EXPECT_EQ(vecCopy1.size(), 0);
+    vecCopy1.~vector<CopyOnly>();   // test destructor after move
     EXPECT_EQ(vecCopy1.capacity(), 0);
     EXPECT_EQ(vecCopy1.size(), 0);
 
@@ -145,9 +147,12 @@ TEST(VectorTest, MoveConstructorTest)
     EXPECT_EQ(vecMove1.size(), 10000000);
     // move constructor
     my::vector<MoveOnly> vecMove2(std::move(vecMove1));
-    vecMove1.~vector<MoveOnly>();
     EXPECT_EQ(vecMove2.size(), 10000000);
     EXPECT_EQ(vecMove2[100].m_a, 10);
     EXPECT_EQ(vecMove1.capacity(), 0);
     EXPECT_EQ(vecMove1.size(), 0);
+    vecMove1.~vector<MoveOnly>();   // test destructor after move
+    EXPECT_EQ(vecMove1.capacity(), 0);
+    EXPECT_EQ(vecMove1.size(), 0);
+
 }
