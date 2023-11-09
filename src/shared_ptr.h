@@ -12,13 +12,13 @@ namespace my
 
 template <typename T, typename Ctrl = __control_block>   // control block template arg needed for unit test mocks
     class __shared_ptr;
-template <typename T, typename Ctrl>
+template <typename T, typename Ctrl = __control_block>   // control block template arg needed for unit test mocks
     class __weak_ptr;
 
 template <typename T>
-    class weak_ptr;
-template <typename T>
     class shared_ptr;
+template <typename T>
+    class weak_ptr;
 
 
 // public interface
@@ -28,22 +28,29 @@ class shared_ptr : public __shared_ptr<T>
 public:
     shared_ptr() : __shared_ptr<T>() { }
     explicit shared_ptr(T* ptr) : __shared_ptr<T>(ptr) { }
+    shared_ptr(__shared_ptr<T>&& other) : __shared_ptr<T>(other) { }   // for __weak_ptr.lock()
+};
+
+
+template <typename T>
+class weak_ptr : public __weak_ptr<T>
+{
+public:
+    weak_ptr() : __weak_ptr<T>() { }
+    weak_ptr(const shared_ptr<T>& other) noexcept : __weak_ptr<T>(other) { }
 };
 
 
 // implementation details 
-template <typename T>
-class weak_ptr
-{
-
-};
-
-
 template <typename T, typename Ctrl>
 class __shared_ptr
 {
+private:
+    using __weak_ptr_T = __weak_ptr<T, Ctrl>;
+    friend __weak_ptr_T;
+
 public:
-    __shared_ptr()
+    constexpr __shared_ptr() noexcept
     {
     }
 
@@ -68,6 +75,40 @@ public:
     {
         other.m_ptr = nullptr;
         other.m_ctrl = nullptr;
+    }
+
+    explicit __shared_ptr(const __weak_ptr_T& other)
+        : m_ptr(other.m_ptr)
+        , m_ctrl(other.m_ctrl)
+    {
+        if (m_ctrl)
+            m_ctrl->increment_shared();
+    }
+
+    __shared_ptr& operator=(const __shared_ptr& other) noexcept
+    {
+        if (this != &other)
+        {
+            this->~__shared_ptr();
+            m_ptr = other.m_ptr;
+            m_ctrl = other.m_ctrl;
+            if (m_ctrl)
+                m_ctrl->increment_shared();
+        }
+        return *this;
+    }
+
+    __shared_ptr& operator=(__shared_ptr&& other) noexcept
+    {
+        if (this != &other)
+        {
+            this->~__shared_ptr();
+            m_ptr = other.m_ptr;
+            m_ctrl = other.m_ctrl;
+            other.m_ptr = nullptr;
+            other.m_ctrl = nullptr;
+        }
+        return *this;
     }
 
     ~__shared_ptr()
@@ -138,6 +179,109 @@ protected:
     }
 };
 
+
+template <typename T, typename Ctrl>
+class __weak_ptr
+{
+private:
+    using __shared_ptr_T = __shared_ptr<T, Ctrl>;
+    friend __shared_ptr_T;
+
+public:
+    constexpr __weak_ptr() noexcept
+    {
+    }
+
+    __weak_ptr(const __weak_ptr& other) noexcept
+        : m_ptr(other.m_ptr)
+        , m_ctrl(other.m_ctrl)
+    {
+        if (m_ctrl)
+            m_ctrl->increment_weak();
+    }
+
+    __weak_ptr(__weak_ptr&& other) noexcept
+        : m_ptr(other.m_ptr)
+        , m_ctrl(other.m_ctrl)
+    {
+        other.m_ptr = nullptr;
+        other.m_ctrl = nullptr;
+    }
+    
+    __weak_ptr(const __shared_ptr_T& other) noexcept
+        : m_ptr(other.m_ptr)
+        , m_ctrl(other.m_ctrl)
+    {
+        if (m_ctrl)
+            m_ctrl->increment_weak();
+    }
+
+    __weak_ptr& operator=(const __weak_ptr& other) noexcept
+    {
+        if (this != &other)
+        {
+            this->~__weak_ptr();
+            m_ptr = other.m_ptr;
+            m_ctrl = other.m_ctrl;
+            if (m_ctrl)
+                m_ctrl->increment_weak();
+        }
+        return *this;
+    }
+
+    __weak_ptr& operator=(__weak_ptr&& other) noexcept
+    {
+        if (this != &other)
+        {
+            this->~__weak_ptr();
+            m_ptr = other.m_ptr;
+            m_ctrl = other.m_ctrl;
+            other.m_ptr = nullptr;
+            other.m_ctrl = nullptr;
+        }
+        return *this;
+    }
+
+    ~__weak_ptr()
+    {
+        if (m_ctrl)
+        {    
+            m_ctrl->decrement_weak();
+            if (m_ctrl->refs() == 0)
+                delete m_ctrl;
+        }
+    }
+
+    size_t use_count() const noexcept
+    {
+        if(m_ctrl)
+            return m_ctrl->shareds();
+        return 0;
+    }
+
+    bool expired() const noexcept
+    {
+        return use_count() == 0;
+    }
+
+    __shared_ptr_T lock() const noexcept
+    {
+        return expired() ? __shared_ptr_T() : __shared_ptr_T(*this);
+    }
+
+private:
+    T* m_ptr = nullptr;
+    Ctrl* m_ctrl = nullptr;
+
+// for mock unit testing
+protected:
+    const Ctrl* get_control_block() const noexcept
+    {
+        return m_ctrl;
+    }
+};
+
+
 class __control_block
 {
 public:
@@ -147,9 +291,19 @@ public:
         ++m_refs;
     }
 
+    void increment_weak()
+    {
+        ++m_refs;
+    }
+
     void decrement_shared()
     {
         --m_shareds;
+        --m_refs;
+    }
+
+    void decrement_weak()
+    {
         --m_refs;
     }
 
