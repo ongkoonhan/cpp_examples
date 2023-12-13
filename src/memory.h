@@ -43,7 +43,3 @@ void delete_aligned(void* ptr, std::align_val_t) noexcept
 
 
 }   // namespace my
-
-
-
-// TODO: test
