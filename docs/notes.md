@@ -34,6 +34,9 @@
 * broadcast vs multicast
     * broadcast is to all hosts
     * multicast is to selected hosts
+* TODO: HTTP 1.0 vs 2.0
+* TODO: How CURL works
+* TODO: How SSL works
 * FIX protocol
     * 
     * https://www.fixtrading.org/online-specification/
@@ -62,7 +65,10 @@
         * Can be replaced by user
         * https://en.cppreference.com/w/cpp/memory/new/operator_new
     * https://learn.microsoft.com/en-us/cpp/standard-library/new-operators?view=msvc-170
+    * TODO: operator delete
 
+* TODO: C++ class member functions and data members
+    * How does compiler translate these to ASM?
 
 
 * miscellaneous

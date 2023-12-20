@@ -9,6 +9,8 @@ using std::size_t, std::align_val_t, std::uintptr_t;
 namespace my 
 {
 
+// modified implementation from static inline void* aligned_alloc (std::size_t al, std::size_t sz)
+// from github gcc-mirror/gcc/libstdc++-v3/libsupc++/new_opa.cc
 // alignment al should be power of 2
 void* new_aligned(size_t sz, align_val_t al)
 {
@@ -35,6 +37,8 @@ void* new_aligned(size_t sz, align_val_t al)
     return aligned_ptr;
 }
 
+// modified implementation from operator delete(void* ptr, std::align_val_t) 
+// from github gcc-mirror/gcc/libstdc++-v3/libsupc++/del_opa.cc
 void delete_aligned(void* ptr, std::align_val_t) noexcept
 {
     if (ptr)
